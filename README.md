@@ -92,5 +92,3 @@ where email = 'your-email@example.com';
 Authenticated admins can provision new administrators programmatically via:
 `POST /api/admin/create-admin` (requires active admin session cookie).
 
-Email: admin@codeelevate.com
-Password: Admin@123456
