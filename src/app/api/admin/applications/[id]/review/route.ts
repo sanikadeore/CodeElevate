@@ -64,23 +64,50 @@ export async function POST(
         })
         .eq("id", applicationId);
 
-      // Upsert enrollment
-      const { data: enrollment, error: enrError } = await supabaseAdmin
+      // Check if enrollment already exists for this user + internship
+      const { data: existingEnrollment } = await supabaseAdmin
         .from("enrollments")
-        .upsert(
-          {
+        .select("id")
+        .eq("user_id", app.user_id)
+        .eq("internship_id", app.internship_id)
+        .maybeSingle();
+
+      let enrollment: any = null;
+      let enrError: any = null;
+
+      if (existingEnrollment) {
+        // Update existing enrollment to ACTIVE
+        const { data, error } = await supabaseAdmin
+          .from("enrollments")
+          .update({
+            application_id: applicationId,
+            start_date: startDate,
+            end_date: endDate,
+            status: "ACTIVE",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingEnrollment.id)
+          .select()
+          .single();
+        enrollment = data;
+        enrError = error;
+      } else {
+        // Insert new enrollment
+        const { data, error } = await supabaseAdmin
+          .from("enrollments")
+          .insert({
             user_id: app.user_id,
             internship_id: app.internship_id,
             application_id: applicationId,
             start_date: startDate,
             end_date: endDate,
             status: "ACTIVE",
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,internship_id" }
-        )
-        .select()
-        .single();
+          })
+          .select()
+          .single();
+        enrollment = data;
+        enrError = error;
+      }
 
       if (enrError) {
         console.error("Enrollment creation error:", enrError);
