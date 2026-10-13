@@ -19,7 +19,11 @@ export const metadata: Metadata = {
 
 export const revalidate = 0;
 
-export default async function LearningPage() {
+export default async function LearningPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ track?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,11 +33,21 @@ export default async function LearningPage() {
     redirect("/login?redirect=/dashboard/learning");
   }
 
-  // 1. Fetch active enrollments & applications
+  const { track: trackSlug } = await searchParams;
+
+  // 1. Fetch all enrollments & applications
   const enrollments = await getStudentEnrollments(supabase, user.id);
   const applications = await getStudentApplications(supabase, user.id);
 
-  const activeEnrollment = enrollments.find((e) => e.status === "ACTIVE") || null;
+  // 2. Pick the target enrollment:
+  //    - If ?track=slug is provided, find that specific enrollment (any status)
+  //    - Otherwise fall back to the first ACTIVE enrollment
+  const activeEnrollment = trackSlug
+    ? (enrollments.find((e) => e.internship?.slug === trackSlug) ||
+       enrollments.find((e) => e.status === "ACTIVE") ||
+       null)
+    : (enrollments.find((e) => e.status === "ACTIVE") || null);
+
   const completedEnrollments = enrollments.filter((e) => e.status === "COMPLETED");
   const pendingApplication =
     applications.find((a) => a.status === "PENDING") || null;

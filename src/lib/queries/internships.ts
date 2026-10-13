@@ -109,12 +109,12 @@ export async function getInternshipBySlug(
 }
 
 /**
- * Fetches student's active applications with associated internship data.
+ * Fetches student's applications with internship data and their enrollment status.
  */
 export async function getStudentApplications(
   supabase: SupabaseClient,
   userId: string
-): Promise<Application[]> {
+): Promise<(Application & { enrollment_status?: string | null })[]> {
   const { data, error } = await supabase
     .from("applications")
     .select("*, internship:internships(*)")
@@ -126,11 +126,21 @@ export async function getStudentApplications(
     return [];
   }
 
-  // Map to include both .internship and .course alias
+  // Fetch enrollments to attach their status to each application
+  const { data: enrollments } = await supabase
+    .from("enrollments")
+    .select("internship_id, status")
+    .eq("user_id", userId);
+
+  const enrollmentMap = new Map(
+    (enrollments || []).map((e: any) => [e.internship_id, e.status])
+  );
+
   return (data || []).map((app: any) => ({
     ...app,
     course: app.internship,
-  })) as Application[];
+    enrollment_status: enrollmentMap.get(app.internship_id) ?? null,
+  }));
 }
 
 /**
