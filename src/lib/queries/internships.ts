@@ -24,7 +24,7 @@ export async function getPublishedInternships(
   let query = supabase
     .from("internships")
     .select("*")
-    .eq("status", "PUBLISHED")
+    .ilike("status", "published")
     .order("created_at", { ascending: true });
 
   if (options?.category && options.category !== "all" && options.category !== "All Domains") {

@@ -45,7 +45,14 @@ export async function POST(
     if (status === "APPROVED") {
       // 2. Approve Application: Call DB RPC or execute directly
       const startDate = app.start_date || new Date().toISOString().split("T")[0];
-      const endDate = app.end_date;
+      // Fallback: if end_date missing, default to start + 30 days
+      const endDate =
+        app.end_date ||
+        new Date(
+          new Date(startDate).getTime() + 30 * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split("T")[0];
 
       // Update application
       await supabaseAdmin
@@ -77,6 +84,10 @@ export async function POST(
 
       if (enrError) {
         console.error("Enrollment creation error:", enrError);
+        return NextResponse.json(
+          { error: "Application approved but enrollment creation failed: " + enrError.message },
+          { status: 500 }
+        );
       }
 
       // Send notification
