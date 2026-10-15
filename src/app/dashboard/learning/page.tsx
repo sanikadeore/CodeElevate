@@ -19,19 +19,11 @@ export const metadata: Metadata = {
 
 export const revalidate = 0;
 
-<<<<<<< HEAD
 interface LearningPageProps {
   searchParams: Promise<{ enrollment?: string }>;
 }
 
 export default async function LearningPage({ searchParams }: LearningPageProps) {
-=======
-export default async function LearningPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ track?: string }>;
-}) {
->>>>>>> 6538fd4164ccf418f33c1b1b58299cfb96402034
   const supabase = await createClient();
   const {
     data: { user },
@@ -41,7 +33,6 @@ export default async function LearningPage({
     redirect("/login?redirect=/dashboard/learning");
   }
 
-<<<<<<< HEAD
   const { enrollment: requestedEnrollmentId } = (await searchParams) || {};
 
   // 1. Resolve enrollment following Rule 6 & Rule 8
@@ -59,24 +50,6 @@ export default async function LearningPage({
 
   const applications = await getStudentApplications(supabase, user.id);
   const completedEnrollments = allEnrollments.filter((e) => e.status === "COMPLETED");
-=======
-  const { track: trackSlug } = await searchParams;
-
-  // 1. Fetch all enrollments & applications
-  const enrollments = await getStudentEnrollments(supabase, user.id);
-  const applications = await getStudentApplications(supabase, user.id);
-
-  // 2. Pick the target enrollment:
-  //    - If ?track=slug is provided, find that specific enrollment (any status)
-  //    - Otherwise fall back to the first ACTIVE enrollment
-  const activeEnrollment = trackSlug
-    ? (enrollments.find((e) => e.internship?.slug === trackSlug) ||
-       enrollments.find((e) => e.status === "ACTIVE") ||
-       null)
-    : (enrollments.find((e) => e.status === "ACTIVE") || null);
-
-  const completedEnrollments = enrollments.filter((e) => e.status === "COMPLETED");
->>>>>>> 6538fd4164ccf418f33c1b1b58299cfb96402034
   const pendingApplication =
     applications.find((a) => a.status === "PENDING") || null;
 

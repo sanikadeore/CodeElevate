@@ -45,15 +45,6 @@ export function ApplicationCard({ application, enrollment }: ApplicationCardProp
 
   const certificateId = enrollment?.certificate?.id;
 
-  // Resolve the correct deep-link for "Go to My Learning"
-  const enrollmentStatus = (application as any).enrollment_status;
-  const isEnrollmentCompleted = enrollmentStatus === "COMPLETED";
-  const learningHref = isEnrollmentCompleted
-    ? "/dashboard/certificates"
-    : course?.slug
-    ? `/dashboard/learning?track=${course.slug}`
-    : "/dashboard/learning";
-
   return (
     <Card className="rounded-3xl border-slate-200/80 bg-white transition-all hover:border-blue-200 hover:shadow-md overflow-hidden">
       <CardHeader className="p-6 pb-4">
@@ -208,7 +199,6 @@ export function ApplicationCard({ application, enrollment }: ApplicationCardProp
           View Track Details
         </Link>
         <div>
-<<<<<<< HEAD
           {isApproved && isEnrollmentCompleted ? (
             <Link
               href={
@@ -231,17 +221,6 @@ export function ApplicationCard({ application, enrollment }: ApplicationCardProp
               <Button
                 size="sm"
                 className="h-9 px-4 rounded-xl text-xs font-bold gap-1.5 shadow-md shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 text-white"
-=======
-          {isApproved ? (
-            <Link href={learningHref}>
-              <Button
-                size="sm"
-                className={`h-9 px-4 rounded-xl text-xs font-bold gap-1.5 shadow-md ${
-                  isEnrollmentCompleted
-                    ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20"
-                    : "shadow-blue-500/20"
-                }`}
->>>>>>> 6538fd4164ccf418f33c1b1b58299cfb96402034
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>{isEnrollmentCompleted ? "View Certificate" : "Go to My Learning"}</span>
