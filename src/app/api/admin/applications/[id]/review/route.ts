@@ -45,7 +45,14 @@ export async function POST(
     if (status === "APPROVED") {
       // 2. Approve Application: Call DB RPC or execute directly
       const startDate = app.start_date || new Date().toISOString().split("T")[0];
-      const endDate = app.end_date;
+      // Fallback: if end_date missing, default to start + 30 days
+      const endDate =
+        app.end_date ||
+        new Date(
+          new Date(startDate).getTime() + 30 * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split("T")[0];
 
       // Update application
       await supabaseAdmin
@@ -57,26 +64,57 @@ export async function POST(
         })
         .eq("id", applicationId);
 
-      // Upsert enrollment
-      const { data: enrollment, error: enrError } = await supabaseAdmin
+      // Check if enrollment already exists for this user + internship
+      const { data: existingEnrollment } = await supabaseAdmin
         .from("enrollments")
-        .upsert(
-          {
+        .select("id")
+        .eq("user_id", app.user_id)
+        .eq("internship_id", app.internship_id)
+        .maybeSingle();
+
+      let enrollment: any = null;
+      let enrError: any = null;
+
+      if (existingEnrollment) {
+        // Update existing enrollment to ACTIVE
+        const { data, error } = await supabaseAdmin
+          .from("enrollments")
+          .update({
+            application_id: applicationId,
+            start_date: startDate,
+            end_date: endDate,
+            status: "ACTIVE",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingEnrollment.id)
+          .select()
+          .single();
+        enrollment = data;
+        enrError = error;
+      } else {
+        // Insert new enrollment
+        const { data, error } = await supabaseAdmin
+          .from("enrollments")
+          .insert({
             user_id: app.user_id,
             internship_id: app.internship_id,
             application_id: applicationId,
             start_date: startDate,
             end_date: endDate,
             status: "ACTIVE",
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,internship_id" }
-        )
-        .select()
-        .single();
+          })
+          .select()
+          .single();
+        enrollment = data;
+        enrError = error;
+      }
 
       if (enrError) {
         console.error("Enrollment creation error:", enrError);
+        return NextResponse.json(
+          { error: "Application approved but enrollment creation failed: " + enrError.message },
+          { status: 500 }
+        );
       }
 
       // Send notification

@@ -103,7 +103,9 @@ export function LearningContent({
     );
   }
 
-  // 2. COMPLETED ENROLLMENTS (All tracks graduated & certified)
+  // 2. COMPLETED ENROLLMENTS (No active track, but has past completions)
+  // NOTE: `enrollment` is only null when page.tsx found zero ACTIVE rows.
+  // If a new ACTIVE enrollment exists it is passed as `enrollment` and this block is skipped.
   if (!enrollment && completedEnrollments && completedEnrollments.length > 0) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
